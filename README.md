@@ -1,118 +1,186 @@
-# Veritas AI - Production Architecture
+# Veritas AI
 
-## 🎯 System Overview
-A production-ready, self-auditing legal research system using adversarial multi-agent reasoning to prevent hallucinations and ensure explainability.
+Veritas AI is a legal research assistant built with adversarial multi-agent RAG.  
+It retrieves relevant contract clauses, generates a grounded answer, challenges that answer with a counter-argument agent, verifies citations, and produces confidence/risk signals before returning a final response.
 
-**Product Name:** Veritas AI (Latin for "truth")  
-**Tagline:** Legal research, verified & challenged.
+This repository is currently optimized for a portfolio/demo workflow, while keeping the architecture extensible for future production hardening.
 
-## 🏗️ Architecture Philosophy
+## Product Summary
 
-### Core Principles
-1. **Domain-Driven Design**: Organized by business capability
-2. **Hexagonal Architecture**: Core logic isolated from external dependencies
-3. **Type Safety**: Pydantic everywhere, no raw dicts
-4. **Explicit over Implicit**: No magic, every decision is traceable
-5. **Agent Adversarial**: Counter-agents validate main agents
+| Item | Description |
+|---|---|
+| Product | Veritas AI |
+| Tagline | Legal research, verified and challenged |
+| Core Pattern | Multi-agent RAG with adversarial validation |
+| Primary Model Provider | Groq (configurable to OpenAI/Anthropic) |
+| Backend | Python 3.11, FastAPI, LangGraph, LangChain |
+| Frontend | Next.js 14 (App Router), Tailwind CSS |
+| Retrieval | FAISS + sentence-transformers embeddings |
 
-### Tech Stack
-- **Backend**: Python 3.11, FastAPI, LangGraph, LangChain
-- **Vector Store**: FAISS (dev) → pgvector (prod)
-- **LLMs**: OpenAI GPT-4 / Anthropic Claude
-- **Frontend**: Next.js 14 (App Router), Tailwind
-- **Infra**: AWS (S3, ECS, RDS)
+## System Architecture
 
-## 📁 Project Structure
-
+```mermaid
+flowchart TD
+    A[User Query] --> B[Query Classification]
+    B --> C[Jurisdiction Detection]
+    C --> D[Clause Retrieval]
+    D --> E[Answer Agent]
+    E --> F[Counter-Argument Agent]
+    F --> G[Citation Verification]
+    G --> H[Confidence and Risk Scoring]
+    H --> I[Decision Gate]
+    I -->|answer| J[Final Answer]
+    I -->|refuse| K[Refusal with rationale]
 ```
-veritas-ai/
+
+## Reasoning Pipeline
+
+| Stage | Purpose | Output |
+|---|---|---|
+| Query Classification | Determine question type and scope | Structured query intent |
+| Jurisdiction Detection | Capture legal context where available | Jurisdiction hint |
+| Clause Retrieval | Semantic retrieval from indexed documents | Top-k relevant clauses |
+| Answer Agent | Generate grounded legal response | Answer + citations |
+| Counter-Argument Agent | Stress-test reasoning for weaknesses | Contradictions/exceptions/ambiguities |
+| Citation Verification | Validate quote grounding against source text | Verification status |
+| Confidence & Risk Scorer | Aggregate retrieval quality + adversarial signals | Confidence score + risk tier |
+| Decision Gate | Apply safety/quality policy | Answer or refusal |
+
+## Repository Layout
+
+```text
+LegalAI RAG/
 ├── backend/
-│   ├── src/
-│   │   ├── agents/          # LangGraph agent nodes
-│   │   ├── schemas/         # Pydantic models (data contracts)
-│   │   ├── graph/           # LangGraph state machine
-│   │   ├── retrieval/       # Vector store & retrieval logic
-│   │   ├── ingestion/       # Document processing & chunking
-│   │   ├── verification/    # Citation & clause verification
-│   │   ├── scoring/         # Confidence & risk scoring
-│   │   ├── api/             # FastAPI endpoints
-│   │   └── utils/           # Logging, config, helpers
-│   ├── tests/               # Unit & integration tests
+│   ├── main.py
 │   ├── requirements.txt
-│   └── config.yaml
+│   ├── src/
+│   │   ├── agents/
+│   │   ├── api/
+│   │   ├── graph/
+│   │   ├── ingestion/
+│   │   ├── retrieval/
+│   │   ├── schemas/
+│   │   └── utils/
+│   └── test_*.py
 ├── frontend/
-│   └── (Next.js app - later step)
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   └── package.json
 ├── data/
-│   ├── raw/                 # Original legal documents
-│   ├── processed/           # Chunked & indexed
-│   └── vector_store/        # FAISS index
-└── docs/
-    └── architecture.md      # System design docs
+├── docs/
+└── setup.sh
 ```
 
-## 🔄 Agent Flow (State Machine)
+## API Surface
 
+The backend mounts these route groups:
+
+| Route Group | Prefix | Responsibility |
+|---|---|---|
+| Health | `/api/health` | Service readiness |
+| Query | `/api/query` | End-to-end multi-agent legal analysis |
+| Documents | `/api/documents` | Upload/list/delete indexed docs |
+| Stats | `/api/stats` | Indexed corpus/system metadata |
+| Docs UI | `/api/docs` | OpenAPI Swagger interface |
+
+## Frontend Pages
+
+| Page | Path | Purpose |
+|---|---|---|
+| Landing | `/` | Product overview and capability framing |
+| Query | `/query` | Ask legal questions and inspect grounded responses |
+| Upload | `/upload` | Upload and annotate legal documents |
+| Documents | `/documents` | Manage indexed documents |
+| History | `/history` | Review previous query runs |
+
+## Local Setup
+
+### Prerequisites
+
+- Python 3.11
+- Node.js 18+ and npm
+- A Groq API key
+
+### 1) Backend setup
+
+```bash
+cd "LegalAI RAG"
+source legalRAG/bin/activate
+pip install -r backend/requirements.txt
 ```
-START
-  ↓
-[Query Classification] → Determine query type & complexity
-  ↓
-[Jurisdiction Detection] → Extract legal jurisdiction context
-  ↓
-[Clause Retrieval] → Retrieve relevant clauses from vector store
-  ↓
-[Answer Agent] → Generate legally grounded answer
-  ↓
-[Counter-Argument Agent] → Attempt to invalidate answer
-  ↓
-[Citation Verifier] → Verify all citations exist & are accurate
-  ↓
-[Confidence & Risk Scorer] → Compute confidence & legal risk scores
-  ↓
-[Decision Gate] → confidence ≥ 85? → Answer
-                  60-84? → Answer + Warning
-                  < 60? → Refuse
-  ↓
-END
+
+Create `backend/.env` (example values):
+
+```env
+GROQ_API_KEY=your_key_here
+LLM_PROVIDER=groq
+LLM_MODEL=llama-3.1-8b-instant
+LLM_TEMPERATURE=0.0
 ```
 
-## 🚀 Getting Started
+Start backend:
 
-### Quick Start
+```bash
+cd backend
+python main.py
+```
 
-1. **Activate your virtual environment:**
-   ```bash
-   cd /Users/ishkumar/Desktop/Projects/LegalAI\ RAG
-   source legalRAG/bin/activate
-   ```
-   You should see `(legalRAG)` in your prompt.
+Backend will be available at:
+- `http://localhost:8000/api/health`
+- `http://localhost:8000/api/docs`
 
-2. **Install dependencies:**
-   ```bash
-   pip install -r backend/requirements.txt
-   ```
+### 2) Frontend setup
 
-3. **Configure environment:**
-   ```bash
-   cd backend
-   cp .env.example .env
-   # Edit .env and add your OPENAI_API_KEY
-   ```
+```bash
+cd "../frontend"
+npm install
+```
 
-4. **Test the system:**
-   ```bash
-   python test_graph.py  # Test the state machine with stubs
-   ```
+Create `frontend/.env.local`:
 
-5. **Next steps:** See `GETTING_STARTED.md` for detailed instructions
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
 
-## 🧪 Testing Strategy
-- **Unit tests**: Individual agent logic
-- **Integration tests**: End-to-end graph execution
-- **Adversarial tests**: Attempt to trigger hallucinations
+Start frontend:
 
-## 📚 Learning Resources
-- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
-- [RAG Best Practices](https://python.langchain.com/docs/use_cases/question_answering/)
-- System design decisions documented in `/docs`
+```bash
+npm run dev
+```
+
+Frontend will be available at `http://localhost:3000`.
+
+## Deployment (Lowest-Cost Portfolio Setup)
+
+| Layer | Platform | Cost Profile |
+|---|---|---|
+| Frontend | Vercel Hobby | Free |
+| Backend | Render Free Web Service | Free (cold starts) |
+
+Deployment order:
+1. Deploy backend (`backend` root) and set runtime env vars.
+2. Deploy frontend (`frontend` root) and set `NEXT_PUBLIC_API_URL` to backend URL.
+3. Smoke test upload and query flow on deployed URLs.
+
+## Sanity Checks Before Sharing
+
+- Frontend production build passes (`npm run build` in `frontend`)
+- Backend starts successfully and serves `/api/health`
+- Upload accepts only supported document types
+- Query returns answer + citations + confidence/risk metadata
+- Counter-argument and citation verification render without schema errors
+- Legal disclaimer is visible in UI
+
+## Known Limitations (Current Scope)
+
+- Designed for portfolio/demo usage, not hardened for regulated production environments.
+- Current API CORS defaults are local-development oriented.
+- Vector index persistence is file-based FAISS for simplicity.
+- Model outputs are constrained/validated, but LLM variability still applies.
+
+## Disclaimer
+
+Veritas AI provides AI-assisted legal research outputs and is not legal advice.  
+Always consult a licensed attorney before acting on legal interpretations.
 
