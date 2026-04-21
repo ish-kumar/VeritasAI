@@ -11,8 +11,21 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from typing import List
 import shutil
 from pathlib import Path
+import numpy as np
 
 from loguru import logger
+from ...utils.config import get_settings
+from ...utils.supabase_client import (
+    validate_supabase_ready,
+    upload_document_file,
+    delete_document_file,
+    upsert_document_record,
+    list_documents_with_chunk_counts,
+    get_document_record,
+    delete_document_records,
+    clear_chunks_for_document,
+    insert_chunk_rows,
+)
 
 router = APIRouter()
 
@@ -49,6 +62,7 @@ async def upload_document(
         raise HTTPException(status_code=500, detail="Ingestion pipeline not initialized")
     
     try:
+        settings = get_settings()
         # Generate document ID if not provided
         if not document_id:
             document_id = Path(file.filename).stem
@@ -64,16 +78,66 @@ async def upload_document(
         
         logger.info(f"Uploaded file saved: {file_path}")
         
-        # Ingest document
+        # Prepare metadata
         metadata = {}
         if jurisdiction:
             metadata["jurisdiction"] = jurisdiction
-        
-        chunks = _pipeline.ingest_document(
-            file_path=file_path,
-            document_id=document_id,
-            metadata=metadata
-        )
+
+        if settings.vector_store_type == "pgvector":
+            validate_supabase_ready()
+
+            # Read uploaded file bytes for storage upload
+            file_bytes = file_path.read_bytes()
+            storage_path = upload_document_file(
+                file_bytes=file_bytes,
+                original_filename=file.filename,
+                document_id=document_id,
+            )
+
+            # Parse/chunk/embed using existing pipeline components
+            parsed_doc = _pipeline.parser.parse_file(file_path)
+            full_metadata = {**parsed_doc.metadata, **metadata}
+            chunks = _pipeline.chunker.chunk_document(
+                text=parsed_doc.text,
+                document_id=document_id,
+                metadata=full_metadata,
+            )
+
+            if chunks:
+                chunk_texts = [c.text for c in chunks]
+                embeddings = _pipeline.embedder.embed_texts(chunk_texts)
+            else:
+                embeddings = np.array([])
+
+            # Upsert document row and refresh chunk rows for this document
+            upsert_document_record(
+                document_id=document_id,
+                filename=file.filename,
+                jurisdiction=jurisdiction,
+                storage_path=storage_path,
+            )
+            clear_chunks_for_document(document_id)
+
+            rows = []
+            for chunk, emb in zip(chunks, embeddings):
+                rows.append(
+                    {
+                        "document_id": chunk.document_id,
+                        "clause_id": chunk.chunk_id,
+                        "section": chunk.section,
+                        "text": chunk.text,
+                        "metadata": chunk.metadata,
+                        "embedding": [float(x) for x in emb.tolist()],
+                    }
+                )
+            insert_chunk_rows(rows)
+        else:
+            # FAISS path (existing behavior)
+            chunks = _pipeline.ingest_document(
+                file_path=file_path,
+                document_id=document_id,
+                metadata=metadata
+            )
         
         # Clean up temp file
         file_path.unlink()
@@ -103,6 +167,14 @@ async def list_documents():
         raise HTTPException(status_code=500, detail="Pipeline not initialized")
     
     try:
+        settings = get_settings()
+        if settings.vector_store_type == "pgvector":
+            documents = list_documents_with_chunk_counts()
+            return {
+                "total_documents": len(documents),
+                "documents": documents
+            }
+
         # Get unique document IDs from chunks
         chunks = _pipeline.vector_store.chunks
         
@@ -148,6 +220,32 @@ async def delete_document(document_id: str):
         raise HTTPException(status_code=500, detail="Pipeline not initialized")
     
     try:
+        settings = get_settings()
+
+        if settings.vector_store_type == "pgvector":
+            validate_supabase_ready()
+
+            doc = get_document_record(document_id)
+            if not doc:
+                raise HTTPException(status_code=404, detail=f"Document {document_id} not found")
+
+            chunks_deleted = delete_document_records(document_id)
+            storage_path = doc.get("storage_path")
+            if storage_path:
+                try:
+                    delete_document_file(storage_path)
+                except Exception as storage_err:
+                    # Non-fatal for DB deletion success
+                    logger.warning(f"Failed to delete storage file {storage_path}: {storage_err}")
+
+            return {
+                "success": True,
+                "document_id": document_id,
+                "chunks_deleted": chunks_deleted,
+                "remaining_chunks": None,
+                "message": f"Deleted {document_id} from Supabase storage and pgvector tables"
+            }
+
         # Count chunks before
         chunks_before = len(_pipeline.vector_store.chunks)
         

@@ -8,5 +8,6 @@ Components:
 """
 
 from .vector_store import FAISSVectorStore
+from .pgvector_store import PGVectorStore
 
-__all__ = ["FAISSVectorStore"]
+__all__ = ["FAISSVectorStore", "PGVectorStore"]

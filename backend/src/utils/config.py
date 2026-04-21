@@ -38,6 +38,13 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key (optional)")
     anthropic_api_key: Optional[str] = Field(default=None, description="Anthropic API key (optional)")
     groq_api_key: Optional[str] = Field(default=None, description="Groq API key (optional)")
+    supabase_url: Optional[str] = Field(default=None, description="Supabase project URL")
+    supabase_service_role_key: Optional[str] = Field(default=None, description="Supabase service role key")
+    supabase_bucket: str = Field(default="legal-documents", description="Supabase bucket")
+    supabase_db_url: Optional[str] = Field(
+        default=None,
+        description="Direct Postgres connection string for pgvector queries"
+    )
     
     # LLM Configuration
     llm_provider: Literal["openai", "anthropic", "groq"] = Field(
@@ -69,10 +76,20 @@ class Settings(BaseSettings):
         description="Embedding model for vector search"
     )
     retrieval_top_k: int = Field(
-        default=5,
+        default=8,
         ge=1,
         le=20,
         description="Number of clauses to retrieve"
+    )
+    retrieval_min_similarity: float = Field(
+        default=0.25,
+        ge=0.0,
+        le=1.0,
+        description="Minimum similarity threshold for accepting retrieved clauses"
+    )
+    allow_stub_fallback: bool = Field(
+        default=False,
+        description="Allow retriever to fall back to stub clauses when backend retrieval fails"
     )
     
     # Confidence & Risk Thresholds

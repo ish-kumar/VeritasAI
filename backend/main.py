@@ -29,6 +29,9 @@ from src.ingestion.pipeline import IngestionPipeline
 from src.agents.retriever import initialize_vector_store
 from src.graph.state_machine import get_compiled_graph
 from src.api.routes import documents, query, stats
+from src.retrieval.pgvector_store import PGVectorStore
+from src.utils.config import get_settings
+from src.utils.supabase_client import validate_supabase_ready
 
 
 # Initialize application
@@ -60,21 +63,29 @@ async def startup_event():
     logger.info("=" * 80)
     
     try:
-        # Check if index exists
-        index_dir = Path("./vector_store")
-        
-        if index_dir.exists():
-            logger.info(f"Loading existing index from {index_dir}")
-            pipeline = IngestionPipeline.load_index(index_dir)
-            logger.success(f"Loaded index with {pipeline.vector_store.index.ntotal} chunks")
-        else:
-            logger.info("No existing index found, creating new pipeline")
+        settings = get_settings()
+
+        if settings.vector_store_type == "pgvector":
+            logger.info("Using pgvector mode (Supabase)")
+            validate_supabase_ready()
             pipeline = IngestionPipeline()
-            logger.info("Empty pipeline created (upload documents to populate)")
-        
-        # Initialize retrieval agent with vector store
-        initialize_vector_store(pipeline.vector_store, pipeline.embedder)
-        logger.success("Retrieval agent initialized")
+            pg_store = PGVectorStore.from_settings()
+            initialize_vector_store(pg_store, pipeline.embedder)
+            logger.success("pgvector retrieval initialized")
+        else:
+            # FAISS mode: load local index if available
+            index_dir = Path("./vector_store")
+            if index_dir.exists():
+                logger.info(f"Loading existing index from {index_dir}")
+                pipeline = IngestionPipeline.load_index(index_dir)
+                logger.success(f"Loaded index with {pipeline.vector_store.index.ntotal} chunks")
+            else:
+                logger.info("No existing index found, creating new pipeline")
+                pipeline = IngestionPipeline()
+                logger.info("Empty pipeline created (upload documents to populate)")
+
+            initialize_vector_store(pipeline.vector_store, pipeline.embedder)
+            logger.success("FAISS retrieval initialized")
         
         # Compile LangGraph
         graph = get_compiled_graph()
@@ -88,8 +99,12 @@ async def startup_event():
         logger.info("=" * 80)
         logger.success("✅ LEGAL RAG API READY")
         logger.info("=" * 80)
-        logger.info(f"📚 Documents indexed: {len(set(c.document_id for c in pipeline.vector_store.chunks))}")
-        logger.info(f"📄 Total chunks: {pipeline.vector_store.index.ntotal}")
+        if settings.vector_store_type == "faiss":
+            logger.info(f"📚 Documents indexed: {len(set(c.document_id for c in pipeline.vector_store.chunks))}")
+            logger.info(f"📄 Total chunks: {pipeline.vector_store.index.ntotal}")
+        else:
+            logger.info("📚 Documents indexed: managed via Supabase")
+            logger.info("📄 Total chunks: managed via pgvector")
         logger.info(f"🔗 API Docs: http://localhost:8000/api/docs")
         logger.info(f"🏥 Health Check: http://localhost:8000/api/health")
         logger.info("=" * 80)
@@ -110,8 +125,9 @@ async def shutdown_event():
     global pipeline
     
     logger.info("Shutting down Legal RAG API...")
-    
-    if pipeline and pipeline.vector_store.index.ntotal > 0:
+
+    settings = get_settings()
+    if settings.vector_store_type == "faiss" and pipeline and pipeline.vector_store.index.ntotal > 0:
         try:
             index_dir = Path("./vector_store")
             pipeline.save_index(index_dir)

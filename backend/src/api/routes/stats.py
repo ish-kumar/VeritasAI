@@ -7,6 +7,8 @@ Routes:
 
 from fastapi import APIRouter, HTTPException
 from loguru import logger
+from ...utils.config import get_settings
+from ...utils.supabase_client import list_documents_with_chunk_counts
 
 router = APIRouter()
 
@@ -36,6 +38,22 @@ async def get_stats():
         raise HTTPException(status_code=500, detail="Pipeline not initialized")
     
     try:
+        settings = get_settings()
+        if settings.vector_store_type == "pgvector":
+            docs = list_documents_with_chunk_counts()
+            total_chunks = sum(d.get("chunk_count", 0) for d in docs)
+            return {
+                "total_documents": len(docs),
+                "total_chunks": total_chunks,
+                "embedding_model": _pipeline.embedder.model_name,
+                "embedding_dimension": _pipeline.embedder.embedding_dim,
+                "chunk_size": _pipeline.chunker.chunk_size,
+                "chunk_overlap": _pipeline.chunker.chunk_overlap,
+                "index_type": "pgvector",
+                "memory_usage_mb": None,
+                "status": "healthy"
+            }
+
         # Get pipeline stats
         stats = _pipeline.get_stats()
         

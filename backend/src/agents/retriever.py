@@ -1,5 +1,5 @@
 """
-Clause Retrieval Agent - Real FAISS Implementation
+Clause Retrieval Agent - FAISS + pgvector implementation
 
 This node:
 1. Embeds the query
@@ -7,7 +7,7 @@ This node:
 3. Applies metadata filtering (jurisdiction, doc type)
 4. Converts chunks to RetrievedClause format
 
-Uses the global vector store instance (loaded at startup).
+Uses the configured vector store backend (loaded at startup).
 """
 
 from loguru import logger
@@ -37,12 +37,12 @@ def initialize_vector_store(vector_store, embedder):
     global _vector_store, _embedder
     _vector_store = vector_store
     _embedder = embedder
-    logger.success("Vector store and embedder initialized for retrieval agent")
+    logger.success("Retrieval backend and embedder initialized")
 
 
 def retrieve_clauses_node(state: GraphState) -> GraphState:
     """
-    Retrieve relevant clauses from FAISS vector store.
+    Retrieve relevant clauses from the configured vector backend.
     
     Algorithm:
     1. Get query text from state
@@ -73,7 +73,7 @@ def retrieve_clauses_node(state: GraphState) -> GraphState:
         # DEBUG: Log retriever state
         logger.debug(f"[Retriever] _vector_store is None: {_vector_store is None}")
         logger.debug(f"[Retriever] _embedder is None: {_embedder is None}")
-        if _vector_store:
+        if _vector_store and hasattr(_vector_store, "index"):
             logger.debug(f"[Retriever] Vector store has {_vector_store.index.ntotal} vectors")
         
         # Embed query
@@ -89,8 +89,9 @@ def retrieve_clauses_node(state: GraphState) -> GraphState:
         logger.debug(f"[Retriever] Filters dict: {filters}")
         logger.debug(f"[Retriever] Filters (after ternary): {filters if filters else None}")
         
-        # Search vector store
+        # Search vector store (FAISS or pgvector)
         top_k = settings.retrieval_top_k
+        min_similarity = settings.retrieval_min_similarity
         logger.debug(f"[Retriever] Calling search with top_k={top_k}, filters={filters if filters else None}")
         results = _vector_store.search(
             query_embedding=query_embedding,
@@ -98,10 +99,22 @@ def retrieve_clauses_node(state: GraphState) -> GraphState:
             filters=filters if filters else None
         )
         logger.debug(f"[Retriever] Search returned {len(results)} results")
+
+        # Safety guard: reject weak matches to avoid misleading grounded answers.
+        filtered_results = [
+            (chunk, similarity)
+            for chunk, similarity in results
+            if float(similarity) >= min_similarity
+        ]
+        if len(filtered_results) != len(results):
+            logger.warning(
+                f"[Retriever] Filtered low-similarity results: kept {len(filtered_results)}/{len(results)} "
+                f"(min_similarity={min_similarity})"
+            )
         
         # Convert chunks to RetrievedClause format
         retrieved_clauses = []
-        for chunk, similarity in results:
+        for chunk, similarity in filtered_results:
             clause = RetrievedClause(
                 clause_id=chunk.chunk_id,
                 text=chunk.text,
@@ -131,8 +144,42 @@ def retrieve_clauses_node(state: GraphState) -> GraphState:
         
     except Exception as e:
         logger.error(f"Error during retrieval: {e}")
-        logger.warning("Falling back to stub clauses")
-        return _retrieve_stub_clauses(state)
+
+        # Safety-first behavior:
+        # - In pgvector mode, do NOT inject stub legal clauses on retrieval failure.
+        #   Return empty retrieval and let downstream logic safely refuse on low confidence.
+        # - In faiss mode, keep optional stub fallback only when explicitly enabled.
+        if settings.vector_store_type == "pgvector":
+            logger.warning(
+                "[Retriever] pgvector retrieval failed; returning empty retrieval result "
+                "to avoid ungrounded answers."
+            )
+            empty_result = RetrievalResult(
+                clauses=[],
+                top_k=0,
+                retrieval_query=query.text
+            )
+            return {
+                **state,
+                "retrieval_result": empty_result,
+                "error": f"Retriever backend error: {type(e).__name__}: {e}",
+            }
+
+        if settings.allow_stub_fallback:
+            logger.warning("Falling back to stub clauses (ALLOW_STUB_FALLBACK=true)")
+            return _retrieve_stub_clauses(state)
+
+        logger.warning("Retrieval failed and stub fallback disabled; returning empty retrieval result")
+        empty_result = RetrievalResult(
+            clauses=[],
+            top_k=0,
+            retrieval_query=query.text
+        )
+        return {
+            **state,
+            "retrieval_result": empty_result,
+            "error": f"Retriever backend error: {type(e).__name__}: {e}",
+        }
 
 
 def _retrieve_stub_clauses(state: GraphState) -> GraphState:
