@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Sophisticated dark palette inspired by 21st.dev */
+  --background: 8 8 12;
+  --surface: 15 15 20;
+  --border: 30 30 40;
+  
+  --text-primary: 250 250 255;
+  --text-secondary: 160 160 180;
+  --text-muted: 100 100 120;
+  
+  --accent-blue: 59 130 246;
+  --accent-purple: 139 92 246;
+  --accent-emerald: 52 211 153;
+  --accent-amber: 251 191 36;
+  --accent-rose: 244 63 94;
+}
+
+body {
+  color: rgb(var(--text-primary));
+  background: #08080c;
+  background-image: radial-gradient(ellipse at top, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+                    radial-gradient(ellipse at bottom, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  min-height: 100vh;
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography system - 6 level hierarchy */
+@layer base {
+  h1, h2, h3 {
+    font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  }
+  
+  h1 {
+    @apply text-5xl font-bold tracking-tight;
+    letter-spacing: -0.02em;
+  }
+  
+  h2 {
+    @apply text-3xl font-semibold tracking-tight;
+    letter-spacing: -0.01em;
+  }
+  
+  h3 {
+    @apply text-xl font-semibold;
+  }
+  
+  h4 {
+    @apply text-lg font-semibold;
+  }
+  
+  p {
+    @apply leading-relaxed;
+  }
+  
+  code {
+    @apply font-mono text-sm px-1.5 py-0.5 rounded bg-surface border border-border;
+  }
+}
+
+/* Utility classes for new design system */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Glassmorphism effect */
+  .glass {
+    @apply bg-white/[0.02] backdrop-blur-xl border border-white/10;
+  }
+  
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 ease-out;
+    @apply hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10;
+  }
+  
+  /* Button press effect */
+  .button-press {
+    @apply active:scale-95 transition-transform;
+  }
+  
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent;
+  }
+  
+  /* Animated gradient background */
+  .gradient-bg-animated {
+    background: linear-gradient(-45deg, 
+      rgba(59, 130, 246, 0.1), 
+      rgba(139, 92, 246, 0.1), 
+      rgba(244, 63, 94, 0.1), 
+      rgba(59, 130, 246, 0.1)
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 8s ease infinite;
+  }
+  
+  /* Stagger animation delays */
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+  
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+  
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+  
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+  
+  .delay-1000 {
+    animation-delay: 1000ms;
+  }
+}
+
+/* Smooth scrolling */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Selection styling */
+::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: rgb(var(--text-primary));
+}

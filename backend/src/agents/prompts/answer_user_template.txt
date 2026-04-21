@@ -1,0 +1,18 @@
+Context (Retrieved Legal Clauses):
+{context}
+
+[END OF CONTEXT]
+
+User Question: {question}
+
+{additional_context}
+
+Instructions:
+- Analyze the context carefully
+- Answer the question using ONLY the provided clauses
+- Cite every claim with clause_id and quoted text
+- Be precise with legal language
+- Acknowledge any limitations or ambiguities
+- Output valid JSON following the schema
+
+Your response:

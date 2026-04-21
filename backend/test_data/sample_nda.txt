@@ -1,0 +1,78 @@
+NON-DISCLOSURE AGREEMENT
+
+This Non-Disclosure Agreement ("Agreement") is made as of March 15, 2024, by and between DataVault LLC ("Disclosing Party") and Acme Consulting Inc. ("Receiving Party").
+
+SECTION 1 - CONFIDENTIAL INFORMATION
+
+1.1 Definition. "Confidential Information" means any information, technical data, trade secrets, or know-how disclosed by Disclosing Party, including but not limited to:
+(a) Business plans and strategies
+(b) Customer and supplier lists
+(c) Financial information and projections
+(d) Software source code and algorithms
+(e) Marketing plans and pricing information
+
+1.2 Exclusions. Confidential Information does not include information that:
+(a) Was publicly known at the time of disclosure
+(b) Becomes publicly known through no breach of this Agreement
+(c) Was rightfully known by Receiving Party prior to disclosure
+(d) Is independently developed by Receiving Party without use of Confidential Information
+(e) Is rightfully received from a third party without breach of confidentiality
+
+SECTION 2 - OBLIGATIONS
+
+2.1 Non-Disclosure. Receiving Party shall:
+(a) Hold all Confidential Information in strict confidence
+(b) Not disclose Confidential Information to third parties without prior written consent
+(c) Use Confidential Information solely for the Purpose (as defined in Section 2.2)
+(d) Protect Confidential Information with at least the same degree of care used for its own confidential information, but no less than reasonable care
+
+2.2 Purpose. The Purpose of this Agreement is to enable the parties to explore a potential business relationship involving the development of a joint data analytics platform.
+
+2.3 Need-to-Know Basis. Receiving Party may disclose Confidential Information only to employees, contractors, and advisors who:
+(a) Have a legitimate need to know
+(b) Have been informed of the confidential nature of the information
+(c) Are bound by confidentiality obligations at least as protective as those in this Agreement
+
+SECTION 3 - TERM AND TERMINATION
+
+3.1 Term. This Agreement shall commence on the date first written above and continue for a period of three (3) years.
+
+3.2 Survival. The obligations set forth in Section 2 shall survive termination of this Agreement for a period of five (5) years.
+
+3.3 Return of Materials. Within ten (10) days of termination or upon request, Receiving Party shall return or destroy all Confidential Information and provide written certification of such destruction.
+
+SECTION 4 - REMEDIES
+
+4.1 Equitable Relief. Receiving Party acknowledges that breach of this Agreement may cause irreparable harm for which monetary damages are an inadequate remedy. Disclosing Party shall be entitled to seek injunctive relief without the necessity of posting a bond.
+
+4.2 Damages. In addition to equitable relief, Disclosing Party may seek monetary damages for any breach of this Agreement.
+
+SECTION 5 - MISCELLANEOUS
+
+5.1 No License. This Agreement does not grant Receiving Party any license or rights to Confidential Information except as expressly stated herein.
+
+5.2 No Warranty. All Confidential Information is provided "AS IS" without warranty of any kind.
+
+5.3 Governing Law. This Agreement shall be governed by the laws of the State of Delaware, without regard to conflict of law principles.
+
+5.4 Jurisdiction. Any disputes arising under this Agreement shall be resolved exclusively in the state or federal courts located in Delaware.
+
+5.5 Entire Agreement. This Agreement constitutes the entire agreement between the parties regarding confidentiality and supersedes all prior agreements.
+
+5.6 Amendment. This Agreement may only be amended by a written instrument signed by both parties.
+
+5.7 Waiver. No waiver of any provision shall be deemed a waiver of any other provision or subsequent breach.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.
+
+DISCLOSING PARTY: DataVault LLC
+By: _______________________
+Name: Robert Chen
+Title: Chief Executive Officer
+Date: March 15, 2024
+
+RECEIVING PARTY: Acme Consulting Inc.
+By: _______________________
+Name: Sarah Johnson
+Title: Chief Operating Officer
+Date: March 15, 2024

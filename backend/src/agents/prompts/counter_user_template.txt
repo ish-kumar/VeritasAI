@@ -1,0 +1,28 @@
+Original Question: {question}
+
+Answer to Challenge:
+{answer_text}
+
+Citations Provided:
+{citations}
+
+Reasoning Given:
+{reasoning}
+
+Context (Retrieved Clauses):
+{context}
+
+[END OF CONTEXT]
+
+Your Task:
+Carefully analyze the answer above and identify all legitimate concerns, weaknesses, and alternative interpretations. Be thorough in finding issues, but only include concerns that genuinely affect legal interpretation.
+
+Consider:
+- Are there contradictions between clauses?
+- What exceptions might apply?
+- Is jurisdiction handled correctly?
+- Is the language ambiguous?
+- What's missing?
+- How else could this be interpreted?
+
+Output your counter-arguments as JSON following the schema provided.

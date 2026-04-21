@@ -1,0 +1,41 @@
+EMPLOYMENT AGREEMENT - FINALIZED VERSION
+
+This Employment Agreement is entered into as of January 1, 2024, between TechCorp Inc. ("Employer") and John Doe ("Employee").
+
+SECTION 2 - COMPENSATION PACKAGE
+
+2.1 Annual Salary. Employee shall receive an annual base salary of $165,000, payable bi-weekly. This represents the final agreed-upon compensation after negotiations.
+
+2.2 Benefits Eligibility. Employee is eligible for standard benefits package including health insurance, 401k matching, and stock options.
+
+SECTION 3 - WORK LOCATION AND REMOTE WORK
+
+3.1 Primary Work Location. Employee must work from the San Francisco office at least 4 days per week. Remote work is not permitted except for medical emergencies or company-mandated closures.
+
+3.2 Flexible Work Policy. Employee may work remotely up to 3 days per week, subject to manager approval. Employee may work from any location within the United States.
+
+SECTION 4 - TERMINATION TERMS
+
+4.1 At-Will Employment. Either party may terminate this agreement with 30 days written notice.
+
+4.2 Immediate Termination. Employer reserves the right to terminate Employee immediately without notice or severance for cause, including poor performance, policy violations, or business necessity.
+
+4.3 Severance Guarantee. Regardless of the reason for termination, Employee shall receive a minimum of 6 months base salary as severance pay.
+
+SECTION 5 - INTELLECTUAL PROPERTY
+
+5.1 Work Product Ownership. All work created by Employee during employment hours, using company resources, or related to company business belongs to Employer.
+
+5.2 Employee Retention Rights. Employee retains ownership of all code, designs, and inventions created during employment, with a perpetual license granted to Employer.
+
+5.3 Joint Ownership. Any intellectual property created during employment shall be jointly owned by Employee and Employer, with each party having equal rights to commercialize.
+
+SECTION 6 - NON-COMPETE
+
+6.1 No Restrictions. Employee is free to work for any company, including direct competitors, immediately upon termination of employment. Employer acknowledges California's prohibition on non-compete agreements.
+
+6.2 Post-Employment Restrictions. Employee agrees not to work for direct competitors for 18 months following termination, and must provide written notice to Employer of any new employment during this period.
+
+This Agreement constitutes the entire understanding between the parties.
+
+Signed: January 1, 2024
