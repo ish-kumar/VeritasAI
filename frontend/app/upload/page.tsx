@@ -31,10 +31,11 @@ export default function UploadPage() {
   const [error, setError] = useState<string | null>(null);
   const [warming, setWarming] = useState(true);
 
-  // Warm up backend on page load so first upload is faster
+  // Warm up backend on page load: triggers runtime init + pre-loads embedding model
+  // so the first upload doesn't stall waiting for model download
   useEffect(() => {
-    api.getDocuments()
-      .catch(() => {}) // silently ignore errors — just waking the server
+    api.warmup()
+      .catch(() => {}) // silently ignore — just waking the server
       .finally(() => setWarming(false));
   }, []);
 

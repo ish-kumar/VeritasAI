@@ -84,7 +84,7 @@ export const api = {
    * Submit a legal query to the RAG pipeline.
    */
   submitQuery: async (request: QueryRequest): Promise<QueryResponse> => {
-    const response = await apiClient.post<QueryResponse>('/query', request);
+    const response = await apiClient.post<QueryResponse>('/query/', request);
     return response.data;
   },
 
@@ -102,9 +102,8 @@ export const api = {
     if (jurisdiction) formData.append('jurisdiction', jurisdiction);
 
     const response = await apiClient.post('/documents/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 180000, // 3 min — allows for cold embed on first upload
     });
     return response.data;
   },
@@ -113,7 +112,7 @@ export const api = {
    * Get list of all indexed documents.
    */
   getDocuments: async (): Promise<{ total_documents: number; documents: DocumentInfo[] }> => {
-    const response = await apiClient.get('/documents');
+    const response = await apiClient.get('/documents/');
     return response.data;
   },
 
@@ -129,7 +128,7 @@ export const api = {
    * Get system statistics.
    */
   getStats: async (): Promise<SystemStats> => {
-    const response = await apiClient.get<SystemStats>('/stats');
+    const response = await apiClient.get<SystemStats>('/stats/');
     return response.data;
   },
 
@@ -138,6 +137,15 @@ export const api = {
    */
   healthCheck: async (): Promise<{ status: string; service: string }> => {
     const response = await apiClient.get('/health');
+    return response.data;
+  },
+
+  /**
+   * Warmup: triggers runtime init and pre-loads embedding model.
+   * Call on page load to eliminate cold-start delay on first upload/query.
+   */
+  warmup: async (): Promise<{ status: string }> => {
+    const response = await apiClient.get('/warmup', { timeout: 90000 });
     return response.data;
   },
 };

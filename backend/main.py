@@ -100,6 +100,23 @@ async def ensure_runtime_initialized() -> None:
         logger.success("✅ Runtime components initialized")
 
 
+@app.get("/api/warmup")
+async def warmup():
+    """
+    Warmup endpoint: initializes runtime and pre-loads the embedding model.
+    Call this after deploy or on page load to avoid cold-start delays on uploads.
+    """
+    await ensure_runtime_initialized()
+    # Force embedding model to load now (not on first upload)
+    try:
+        pipeline.embedder._ensure_model_loaded()
+        logger.success("Warmup complete — embedder ready")
+        return {"status": "ready", "embedder": pipeline.embedder.model_name}
+    except Exception as e:
+        logger.warning(f"Warmup embedder pre-load failed: {e}")
+        return {"status": "partial", "detail": str(e)}
+
+
 @app.on_event("startup")
 async def startup_event():
     """
